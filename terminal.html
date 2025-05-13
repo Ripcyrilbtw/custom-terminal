@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Portfolio</title>
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --text-color: #f0f0f0;
+            --accent-color: #00ff00;
+            --prompt-color: #00ff00;
+            --secondary-color: #0088ff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            padding: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #terminal {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        #terminal::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #terminal::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        
+        #terminal::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+        
+        .input-line {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .prompt {
+            color: var(--prompt-color);
+            margin-right: 8px;
+            white-space: nowrap;
+        }
+        
+        .command {
+            flex: 1;
+        }
+        
+        .output-line {
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        
+        .command-input {
+            display: flex;
+            align-items: center;
+        }
+        
+        #command-prompt {
+            color: var(--prompt-color);
+            margin-right: 8px;
+            white-space: nowrap;
+        }
+        
+        #user-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-color);
+            font-size: 16px;
+            outline: none;
+            caret-color: var(--text-color);
+        }
+        
+        .highlight {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+        
+        .secondary {
+            color: var(--secondary-color);
+        }
+        
+        .section {
+            margin-bottom: 10px;
+        }
+        
+        .section-title {
+            color: var(--accent-color);
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .ascii-art {
+            color: var(--secondary-color);
+            white-space: pre;
+            line-height: 1.2;
+            margin: 10px 0;
+        }
+        
+        .project {
+            margin-bottom: 15px;
+        }
+        
+        .project-title {
+            color: var(--accent-color);
+        }
+        
+        .project-tech {
+            color: var(--secondary-color);
+            font-style: italic;
+        }
+        
+        .help-command {
+            display: flex;
+            margin: 5px 0;
+        }
+        
+        .help-cmd {
+            color: var(--accent-color);
+            width: 120px;
+        }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        th, td {
+            padding: 6px;
+            text-align: left;
+            border: 1px solid #444;
+        }
+        
+        th {
+            color: var(--accent-color);
+            background-color: #222;
+        }
+        
+        #header {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .welcome-msg {
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div class="ascii-art">
+  _____                    _             _   _____           _    __      _ _       
+ |_   _|                  (_)           | | |  __ \         | |  / _|    | (_)      
+   | |  ___ _ __ _ __ ___  _ _ __   __ _| | | |__) |__  _ __| |_| |_ ___ | |_  ___  
+   | | / _ \ '__| '_ ` _ \| | '_ \ / _` | | |  ___/ _ \| '__| __|  _/ _ \| | |/ _ \ 
+   | ||  __/ |  | | | | | | | | | | (_| | | | |  | (_) | |  | |_| || (_) | | | (_) |
+   |_| \___|_|  |_| |_| |_|_|_| |_|\__,_|_| |_|   \___/|_|   \__|_| \___/|_|_|\___/ 
+        </div>
+        <p class="welcome-msg">Welcome to my interactive terminal portfolio. Type <span class="highlight">help</span> to see available commands.</p>
+    </div>
+    
+    <div id="terminal"></div>
+    
+    <div class="command-input">
+        <div id="command-prompt">visitor@portfolio:~$</div>
+        <input type="text" id="user-input" autofocus placeholder="Type a command...">
+    </div>
+
+    <script>
+        const terminal = document.getElementById('terminal');
+        const userInput = document.getElementById('user-input');
+        
+        // Portfolio data
+        const portfolio = {
+            name: "Your Name",
+            title: "Full Stack Developer",
+            about: `I'm a passionate developer with expertise in web technologies and a love for creating intuitive, user-friendly applications. With 5+ years of experience building modern web applications, I enjoy solving complex problems and continuously learning new technologies.`,
+            
+            skills: [
+                { category: "Frontend", items: "HTML, CSS, JavaScript, React, Vue.js, TypeScript" },
+                { category: "Backend", items: "Node.js, Python, Java, Express, Django, Spring Boot" },
+                { category: "Database", items: "MongoDB, PostgreSQL, MySQL, Redis" },
+                { category: "DevOps", items: "Docker, Kubernetes, AWS, CI/CD, Git" },
+                { category: "Other", items: "RESTful APIs, GraphQL, Agile, TDD, UI/UX Design" }
+            ],
+            
+            experience: [
+                {
+                    title: "Senior Developer",
+                    company: "Tech Solutions Inc.",
+                    period: "2022 - Present",
+                    description: "Leading development of enterprise web applications. Mentoring junior developers and implementing best practices."
+                },
+                {
+                    title: "Full Stack Developer",
+                    company: "Digital Innovations",
+                    period: "2019 - 2022",
+                    description: "Built scalable microservices architecture. Worked on frontend applications using React and backend services with Node.js."
+                },
+                {
+                    title: "Junior Developer",
+                    company: "WebCraft Agency",
+                    period: "2017 - 2019",
+                    description: "Developed responsive websites and e-commerce platforms for various clients. Implemented SEO best practices."
+                }
+            ],
+            
+            projects: [
+                {
+                    title: "E-commerce Platform",
+                    tech: "React, Node.js, MongoDB, AWS",
+                    description: "Full-featured e-commerce platform with payment processing, inventory management, and analytics dashboard."
+                },
+                {
+                    title: "Project Management Tool",
+                    tech: "Vue.js, Express, PostgreSQL, Docker",
+                    description: "Collaborative project management application with real-time updates, task tracking, and team communication features."
+                },
+                {
+                    title: "Health & Fitness App",
+                    tech: "React Native, Firebase, GraphQL",
+                    description: "Mobile application for tracking workouts, nutrition, and health metrics with personalized recommendations."
+                },
+                {
+                    title: "Content Management System",
+                    tech: "TypeScript, NestJS, MySQL",
+                    description: "Headless CMS with API-first approach, supporting multiple content types and user roles."
+                }
+            ],
+            
+            education: [
+                {
+                    degree: "Master of Computer Science",
+                    school: "Tech University",
+                    year: "2017"
+                },
+                {
+                    degree: "Bachelor of Science in Information Technology",
+                    school: "State University",
+                    year: "2015"
+                }
+            ],
+            
+            contact: {
+                email: "your.email@example.com",
+                phone: "+1 (555) 123-4567",
+                website: "www.yourportfolio.com",
+                github: "github.com/yourusername",
+                linkedin: "linkedin.com/in/yourprofile"
+            },
+            
+            social: [
+                { platform: "GitHub", url: "https://github.com/yourusername" },
+                { platform: "LinkedIn", url: "https://linkedin.com/in/yourprofile" },
+                { platform: "Twitter", url: "https://twitter.com/yourhandle" }
+            ]
+        };
+        
+        // Available commands
+        const commands = {
+            help: {
+                description: "Show available commands",
+                action: showHelp
+            },
+            clear: {
+                description: "Clear the terminal",
+                action: clearTerminal
+            },
+            about: {
+                description: "Display information about me",
+                action: showAbout
+            },
+            skills: {
+                description: "List my technical skills",
+                action: showSkills
+            },
+            experience: {
+                description: "Show my work experience",
+                action: showExperience
+            },
+            projects: {
+                description: "Display my portfolio projects",
+                action: showProjects
+            },
+            education: {
+                description: "Show my educational background",
+                action: showEducation
+            },
+            contact: {
+                description: "Display my contact information",
+                action: showContact
+            },
+            social: {
+                description: "Show my social media profiles",
+                action: showSocial
+            },
+            resume: {
+                description: "View or download my resume",
+                action: showResume
+            },
+            echo: {
+                description: "Echo a message",
+                action: echo
+            },
+            date: {
+                description: "Display current date and time",
+                action: showDate
+            },
+            whoami: {
+                description: "Display current user",
+                action: showWhoami
+            },
+            ls: {
+                description: "List directory contents",
+                action: showLs
+            },
+            cat: {
+                description: "Display file contents",
+                action: showCat
+            }
+        };
+        
+        // Files in the virtual filesystem
+        const files = {
+            "README.md": "# Welcome to my Portfolio\n\nThis is an interactive terminal-style portfolio. Type 'help' to see available commands.",
+            "about.txt": portfolio.about,
+            "contact.json": JSON.stringify(portfolio.contact, null, 2),
+            "projects.txt": portfolio.projects.map(p => `${p.title} (${p.tech}): ${p.description}`).join('\n\n')
+        };
+        
+        // Initialize terminal
+        function init() {
+            userInput.addEventListener('keypress', handleKeyPress);
+            displayWelcomeMessage();
+        }
+        
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                const cmd = userInput.value.trim();
+                processCommand(cmd);
+                userInput.value = '';
+            }
+        }
+        
+        function processCommand(cmd) {
+            addToTerminal('visitor@portfolio:~$', cmd);
+            
+            if (cmd === '') {
+                return;
+            }
+            
+            const [command, ...args] = cmd.split(' ');
+            
+            if (commands[command]) {
+                commands[command].action(args);
+            } else {
+                addOutput(`Command not found: ${command}. Type 'help' to see available commands.`);
+            }
+        }
+        
+        function addToTerminal(prompt, command) {
+            const inputLine = document.createElement('div');
+            inputLine.className = 'input-line';
+            
+            const promptElement = document.createElement('div');
+            promptElement.className = 'prompt';
+            promptElement.textContent = prompt;
+            
+            const commandElement = document.createElement('div');
+            commandElement.className = 'command';
+            commandElement.textContent = command;
+            
+            inputLine.appendChild(promptElement);
+            inputLine.appendChild(commandElement);
+            terminal.appendChild(inputLine);
+            
+            scrollToBottom();
+        }
+        
+        function addOutput(content) {
+            const outputLine = document.createElement('div');
+            outputLine.className = 'output-line';
+            outputLine.innerHTML = content;
+            terminal.appendChild(outputLine);
+            
+            scrollToBottom();
+        }
+        
+        function scrollToBottom() {
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        function displayWelcomeMessage() {
+            addOutput(`Welcome to my interactive terminal portfolio. Type <span class="highlight">help</span> to see available commands.`);
+        }
+        
+        // Command functions
+        function showHelp() {
+            let output = `<div class="section">
+                <div class="section-title">Available Commands:</div>`;
+            
+            for (const [cmd, info] of Object.entries(commands)) {
+                output += `<div class="help-command">
+                    <span class="help-cmd">${cmd}</span>
+                    <span>${info.description}</span>
+                </div>`;
+            }
+            
+            output += '</div>';
+            addOutput(output);
+        }
+        
+        function clearTerminal() {
+            terminal.innerHTML = '';
+        }
+        
+        function showAbout() {
+            const output = `<div class="section">
+                <div class="section-title">About Me</div>
+                <div><span class="highlight">Name:</span> ${portfolio.name}</div>
+                <div><span class="highlight">Title:</span> ${portfolio.title}</div>
+                <div class="section">${portfolio.about}</div>
+            </div>`;
+            addOutput(output);
+        }
+        
+        function showSkills() {
+            let output = `<div class="section">
+                <div class="section-title">Technical Skills</div>
+                <table>
+                    <tr>
+                        <th>Category</th>
+                        <th>Skills</th>
+                    </tr>`;
+            
+            portfolio.skills.forEach(skill => {
+                output += `<tr>
+                    <td>${skill.category}</td>
+                    <td>${skill.items}</td>
+                </tr>`;
+            });
+            
+            output += `</table>
+            </div>`;
+            addOutput(output);
+        }
+        
+        function showExperience() {
+            let output = `<div class="section">
+                <div class="section-title">Work Experience</div>`;
+            
+            portfolio.experience.forEach(job => {
+                output += `<div class="project">
+                    <div><span class="project-title">${job.title}</span> at ${job.company}</div>
+                    <div class="project-tech">${job.period}</div>
+                    <div>${job.description}</div>
+                </div>`;
+            });
+            
+            output += '</div>';
+            addOutput(output);
+        }
+        
+        function showProjects() {
+            let output = `<div class="section">
+                <div class="section-title">Portfolio Projects</div>`;
+            
+            portfolio.projects.forEach(project => {
+                output += `<div class="project">
+                    <div class="project-title">${project.title}</div>
+                    <div class="project-tech">${project.tech}</div>
+                    <div>${project.description}</div>
+                </div>`;
+            });
+            
+            output += '</div>';
+            addOutput(output);
+        }
+        
+        function showEducation() {
+            let output = `<div class="section">
+                <div class="section-title">Education</div>`;
+            
+            portfolio.education.forEach(edu => {
+                output += `<div class="project">
+                    <div class="project-title">${edu.degree}</div>
+                    <div>${edu.school}, ${edu.year}</div>
+                </div>`;
+            });
+            
+            output += '</div>';
+            addOutput(output);
+        }
+        
+        function showContact() {
+            const contact = portfolio.contact;
+            const output = `<div class="section">
+                <div class="section-title">Contact Information</div>
+                <div><span class="highlight">Email:</span> ${contact.email}</div>
+                <div><span class="highlight">Phone:</span> ${contact.phone}</div>
+                <div><span class="highlight">Website:</span> ${contact.website}</div>
+                <div><span class="highlight">GitHub:</span> ${contact.github}</div>
+                <div><span class="highlight">LinkedIn:</span> ${contact.linkedin}</div>
+            </div>`;
+            addOutput(output);
+        }
+        
+        function showSocial() {
+            let output = `<div class="section">
+                <div class="section-title">Social Media</div>`;
+            
+            portfolio.social.forEach(platform => {
+                output += `<div><span class="highlight">${platform.platform}:</span> <a href="${platform.url}" target="_blank" class="secondary">${platform.url}</a></div>`;
+            });
+            
+            output += '</div>';
+            addOutput(output);
+        }
+        
+        function showResume() {
+            const output = `<div class="section">
+                <div class="section-title">Resume</div>
+                <div>My complete resume can be viewed online or downloaded as a PDF.</div>
+                <div class="section">
+                    <a href="#" class="highlight">View Resume Online</a> | 
+                    <a href="#" class="highlight">Download PDF</a>
+                </div>
+            </div>`;
+            addOutput(output);
+        }
+        
+        function echo(args) {
+            addOutput(args.join(' '));
+        }
+        
+        function showDate() {
+            const now = new Date();
+            addOutput(`Current date and time: ${now.toLocaleString()}`);
+        }
+        
+        function showWhoami() {
+            addOutput(`visitor`);
+        }
+        
+        function showLs() {
+            let output = `<div class="section">`;
+            Object.keys(files).forEach(file => {
+                output += `<div>${file}</div>`;
+            });
+            output += '</div>';
+            addOutput(output);
+        }
+        
+        function showCat(args) {
+            if (args.length === 0) {
+                addOutput('Usage: cat [filename]');
+                return;
+            }
+            
+            const filename = args[0];
+            if (files[filename]) {
+                addOutput(`<pre>${files[filename]}</pre>`);
+            } else {
+                addOutput(`File not found: ${filename}`);
+            }
+        }
+        
+        // Start the terminal
+        init();
+    </script>
+</body>
+</html>
